@@ -357,12 +357,12 @@ function HUD.loop(f)
     end
 
     -- ATMO
-    setNextFillColor(f.layer3, color[1], color[2], color[3], color[4])
+    setNextFillColor(f.layer3, 0, 0.9, 0.8, 1)
     setNextTextAlign(f.layer3, AlignH_Right, AlignV_Middle)
     addText(f.layer3, f.f_m, string.format("ATMO F: %.2f%%", data.atmoPercentage), f.sw - 50, f.sh - 220)
 
     -- SPACE
-    setNextFillColor(f.layer3, color[1], color[2], color[3], color[4])
+    setNextFillColor(f.layer3, 0, 0.9, 0.8, 1)
     setNextTextAlign(f.layer3, AlignH_Right, AlignV_Middle)
     addText(f.layer3, f.f_m, string.format("SPACE F: %.2f%%", data.spacePercentage), f.sw - 50, f.sh - 200)
 
