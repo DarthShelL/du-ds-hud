@@ -60,6 +60,9 @@ end
 
 local atmoFuelMaxVolume = atmofueltank[1].getMaxVolume()
 local atmoFuelCurrentVolume = atmofueltank[1].getItemsVolume()
+for i=1, atmofueltank_size do
+    atmoFuelCurrentVolume = atmoFuelCurrentVolume + atmofueltank[i].getItemsVolume()
+end
 local atmoPercentage = atmoFuelCurrentVolume * 100 / atmoFuelMaxVolume
 local spaceFuelMaxVolume = spacefueltank[1].getMaxVolume() * 3
 local spaceFuelCurrentVolume = 0
