@@ -59,7 +59,7 @@ if forward:dot(east) < 0 then
 end
 
 local atmoFuelMaxVolume = atmofueltank[1].getMaxVolume()
-local atmoFuelCurrentVolume = atmofueltank[1].getItemsVolume()
+local atmoFuelCurrentVolume = 0
 for i=1, atmofueltank_size do
     atmoFuelCurrentVolume = atmoFuelCurrentVolume + atmofueltank[i].getItemsVolume()
 end
