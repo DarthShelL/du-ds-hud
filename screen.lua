@@ -286,7 +286,7 @@ function HUD.loop(f)
     f.stabBtn:draw()
     setNextFillColor(f.layer3, 0, 0.9, 0.8, 1)
     setNextTextAlign(f.layer3, AlignH_Right, AlignV_Middle)
-    addText(f.layer3, f.f_m, string.format("ALT %.2f", data.altitude), f.sw - 50, f.sh - 150)
+    addText(f.layer3, f.f_m, string.format("ALT %.2f", data.alt), f.sw - 50, f.sh - 150)
 
     local color = { 0, 0.9, 0.8, 1 }
     if f.stabBtn:getState() then
@@ -296,19 +296,19 @@ function HUD.loop(f)
     -- ATMO
     setNextFillColor(f.layer3, 0, 0.9, 0.8, 1)
     setNextTextAlign(f.layer3, AlignH_Right, AlignV_Middle)
-    addText(f.layer3, f.f_m, string.format("ATMO F: %.2f%%", data.atmoPercentage), f.sw - 50, f.sh - 220)
+    addText(f.layer3, f.f_m, string.format("ATMO F: %.2f%%", data.aP), f.sw - 50, f.sh - 220)
 
     -- SPACE
     setNextFillColor(f.layer3, 0, 0.9, 0.8, 1)
     setNextTextAlign(f.layer3, AlignH_Right, AlignV_Middle)
-    addText(f.layer3, f.f_m, string.format("SPACE F: %.2f%%", data.spacePercentage), f.sw - 50, f.sh - 200)
+    addText(f.layer3, f.f_m, string.format("SPACE F: %.2f%%", data.sP), f.sw - 50, f.sh - 200)
 
     setNextFillColor(f.layer3, color[1], color[2], color[3], color[4])
     setNextTextAlign(f.layer3, AlignH_Right, AlignV_Middle)
     addText(f.layer3, f.f_m, "STAB", f.sw - 50, f.sh - 120)
 
-    f:compass(data.compass, data.atmoDensity)
-    f:artificialHorizon(data.pitch, data.roll, -60, data.velocityProjX, data.velocityProjY, data.atmoDensity)
+    f:compass(data.cmp, data.aD)
+    f:artificialHorizon(data.pitch, data.roll, -60, data.vPX, data.vPY, data.aD)
 
     -- prepare data for unit
     data = {}
