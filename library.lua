@@ -124,10 +124,25 @@ function collectEngines()
             local m = string.match(class, spacePattern)
             engines.space[m].number = engines.space[m].number + 1
             if engines.space[m].engine == nil then
-                engines.space[m].engine = unit["se_"..m]
+                engines.space[m].engine = unit["se_" .. m]
             end
         end
     end
+end
+
+function wp2world(waypoint)
+    local wp = {}
+    if next(waypoint) ~= nil then
+        if waypoint.bodyId == 0 then
+            return vec3(waypoint.latitude, waypoint.longitude, waypoint.altitude)
+        end
+        local body = atlas[waypoint.systemId][waypoint.bodyId]
+        local latitude  = constants.deg2rad*clamp(waypoint.latitude, -90, 90)
+        local longitude = constants.deg2rad*(waypoint.longitude % 360)
+        local xproj = math.cos(latitude)
+        wp = vec3(body.center) + (body.radius + waypoint.altitude) * vec3(xproj * math.cos(longitude), xproj * math.sin(longitude), math.sin(latitude))
+    end
+    return {wp:unpack()}
 end
 
 -- PID ----------------

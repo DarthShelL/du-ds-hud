@@ -16,8 +16,25 @@ local vel = vec3.new(construct.getVelocity())
 
 Nav:update()
 
+local w = {}
+if next(waypoint) ~= nil then
+    local wpPos = vec3(wp2world(waypoint))
+    local pos = vec3(construct.getWorldPosition())
+    local path = vec3(wpPos - pos):normalize()
+    local up = vec3(construct.getWorldOrientationUp())
+    local right = vec3(construct.getWorldOrientationRight())
+    local forward = vec3(construct.getWorldOrientationForward())
+
+    w = {
+        path:dot(right),
+        path:dot(up),
+        path:dot(forward)
+    }
+end
+
 -- pack data for screen
 data = {
+    wp = w,
     alt = getTrimmedAltitude(),
     pitch = pitch,
     roll = roll,

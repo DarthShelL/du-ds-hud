@@ -11,6 +11,7 @@ local roll_kD = 0.3 --export: Roll PID koef
 collectEngines()
 
 -- VARS
+waypoint = {} -- waypoint which you get from lua input
 
 for i, val in ipairs(construct.getMaxThrustAlongAxis("space_engine", construct.getForward())) do
     system.print("index: "..i.." val:"..val)
@@ -41,6 +42,7 @@ Nav.axisCommandManager:setupCustomTargetSpeedRanges(axisCommandId.longitudinal, 
 Nav.axisCommandManager:setTargetGroundAltitude(4)
 
 screen.setRenderScript([[local json = require('dkjson')
+local vec3 = require('cpml/vec3')
 local constants = require('cpml/constants')
 
 -- helper functions ---
@@ -114,6 +116,22 @@ function HUD.new(layer, layer2, layer3, f_xs, f_s, f_m, b_t, sw, sh)
     f.sw, f.sh = sw, sh
     f.stabBtn = button.new(f.layer3, sw - 100, sh - 100, 50, 50)
     return f
+end
+
+function HUD.waypoint(f, wp, lookDeltaY)
+    if next(wp) ~= nil then
+        -- draw
+        wp = vec3(wp) * 100
+        setDefaultStrokeColor(f.layer3, Shape_Line, 0, 1, 0, 1)
+        setDefaultStrokeWidth(f.layer3, Shape_Line, 1)
+        setDefaultFillColor(f.layer3, Shape_Circle, 0, 1, 0, 1)
+        if (wp.z < 0) then
+            setDefaultStrokeColor(f.layer3, Shape_Line, 1, 0, 0, 1)
+            setDefaultFillColor(f.layer3, Shape_Circle, 1, 0, 0, 1)
+        end
+        addLine(f.layer3, f.sw/2, f.sh/2 + lookDeltaY, f.sw/2 + wp.x, f.sh/2 + lookDeltaY - wp.y)
+        addCircle(f.layer3, f.sw/2 + wp.x, f.sh/2 + lookDeltaY - wp.y, 4)
+    end
 end
 
 function HUD.compass(f, heading, atmoDensity)
@@ -351,6 +369,7 @@ function HUD.loop(f)
 
     f:compass(data.cmp, data.aD)
     f:artificialHorizon(data.pitch, data.roll, -60, data.vPX, data.vPY, data.aD)
+    f:waypoint(data.wp, -60)
 
     -- prepare data for unit
     data = {}
