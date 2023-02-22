@@ -1,3 +1,5 @@
+
+-- DS ===============================================================================================================
 local pitch_kP = 0.2 --export: Pitch PID koef
 local pitch_kI = 0.0001 --export: Pitch PID koef
 local pitch_kD = 0.3 --export: Pitch PID koef
@@ -5,7 +7,24 @@ local roll_kP = 0.2 --export: Roll PID koef
 local roll_kI = 0.0001 --export: Roll PID koef
 local roll_kD = 0.3 --export: Roll PID koef
 
+-- collecting engines
+collectEngines()
+
 -- VARS
+
+for i, val in ipairs(construct.getMaxThrustAlongAxis("space_engine", construct.getForward())) do
+    system.print("index: "..i.." val:"..val)
+end
+system.print("----")
+for i, val in ipairs(unit.getEngineThrust("space_engine")) do
+    system.print("index: "..i.." val:"..val)
+end
+
+system.print("small: "..engines.space.small.number)
+system.print("medium: "..engines.space.medium.number)
+system.print("large: "..engines.space.large.number)
+
+system.print(engines.space.large.engine.getMaxThrust())
 
 -- PID
 pitchPid = Pid.new(system, pitch_kP, pitch_kI, pitch_kD, -1, 1)
@@ -20,46 +39,6 @@ brakeInput = 0
 Nav = Navigator.new(system, core, unit)
 Nav.axisCommandManager:setupCustomTargetSpeedRanges(axisCommandId.longitudinal, { 2000, 5000, 10000, 20000, 30000 })
 Nav.axisCommandManager:setTargetGroundAltitude(4)
-
--- category panel display helpers
-_autoconf = {}
-_autoconf.panels = {}
-_autoconf.panels_size = 0
-_autoconf.displayCategoryPanel = function(elements, size, title, type, widgetPerData)
-    widgetPerData = widgetPerData or false -- default to one widget for all data
-    if size > 0 then
-        local panel = system.createWidgetPanel(title)
-        local widget
-        if not widgetPerData then
-            widget = system.createWidget(panel, type)
-        end
-        for i = 1, size do
-            if widgetPerData then
-                widget = system.createWidget(panel, type)
-            end
-            system.addDataToWidget(elements[i].getWidgetDataId(), widget)
-        end
-        _autoconf.panels_size = _autoconf.panels_size + 1
-        _autoconf.panels[_autoconf.panels_size] = panel
-    end
-end
-_autoconf.hideCategoryPanels = function()
-    for i = 1, _autoconf.panels_size do
-        system.destroyWidgetPanel(_autoconf.panels[i])
-    end
-end
-
--- Proxy array to access auto-plugged slots programmatically
-atmofueltank = {}
-atmofueltank[1] = atmofueltank_1
-atmofueltank_size = 1
-
-spacefueltank = {}
-spacefueltank[1] = spacefueltank_1
-spacefueltank[2] = spacefueltank_2
-spacefueltank[3] = spacefueltank_3
-spacefueltank_size = 3
--- End of auto-generated code
 
 screen.setRenderScript([[local json = require('dkjson')
 local constants = require('cpml/constants')

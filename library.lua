@@ -57,22 +57,6 @@ function parseWaypoint(waypoint)
     return w
 end
 
-function getFuelFlowRate(fuelConsumption, fuelWeight)
-    return fuelConsumption * fuelWeight
-end
-
-function getIsp(thrust, fuelFlowRate)
-    return thrust / (fuelFlowRate * constants.g) * 3600
-end
-
-function getExhaustVelocity(Isp)
-    return Isp * constants.g
-end
-
-function getDeltaV(shipMass, shipDryMass, Isp)
-    return Isp * constants.g * math.log(shipMass / shipDryMass)
-end
-
 -- calculates time to burn needed to reach to desiredSpeed
 function calculateBurnTime(currentVelocity, desiredVelocity, shipMass, deltaV, thrust)
 
@@ -81,7 +65,7 @@ end
 function getFuelPercentage(tanks, number_of_tanks)
     local currentVolume = 0
     local maxVolume = tanks[1].getMaxVolume() * number_of_tanks
-    for i=1, number_of_tanks do
+    for i = 1, number_of_tanks do
         currentVolume = currentVolume + tanks[i].getItemsVolume()
     end
     return currentVolume * 100 / maxVolume
@@ -102,9 +86,53 @@ function getDeg2north()
     return angle
 end
 
+function getFuelFlowRate(fuelConsumption, fuelWeight)
+    return fuelConsumption * fuelWeight
+end
+
+function getIsp(thrust, fuelFlowRate)
+    return thrust / (fuelFlowRate * constants.g) * 3600
+end
+
+function getExhaustVelocity(Isp)
+    return Isp * constants.g
+end
+
+function getDeltaV(shipMass, shipDryMass, Isp)
+    return Isp * constants.g * math.log(shipMass / shipDryMass)
+end
+
+engines = {}
+engines.space = {}
+engines.space.extrasmall = {}
+engines.space.extrasmall.number = 0
+engines.space.small = {}
+engines.space.small.number = 0
+engines.space.medium = {}
+engines.space.medium.number = 0
+engines.space.large = {}
+engines.space.large.number = 0
+engines.space.extralarge = {}
+engines.space.extralarge.number = 0
+
+function collectEngines()
+    local elementIdList = core.getElementIdList()
+    for i, id in ipairs(elementIdList) do
+        local class = core.getElementClassById(id):lower()
+        local spacePattern = 'spaceengine([a-z]+)group'
+        if (class:find("spaceengine")) then
+            local m = string.match(class, spacePattern)
+            engines.space[m].number = engines.space[m].number + 1
+            if engines.space[m].engine == nil then
+                engines.space[m].engine = unit["se_"..m]
+            end
+        end
+    end
+end
+
 -- PID ----------------
 Pid = {}
-Pid.__index = Pid;
+Pid.__index = Pid
 
 function Pid.new(system, kp, ki, kd, sMin, sMax)
     local self = setmetatable({}, Pid)
