@@ -75,19 +75,55 @@ function HUD.new(layer, layer2, layer3, f_xs, f_s, f_m, b_t, sw, sh)
     return f
 end
 
-function HUD.waypoint(f, wp, lookDeltaY)
+function HUD.waypoint(f, wp, lookDeltaY, atmodens)
     if next(wp) ~= nil then
-        -- draw
-        wp = vec3(wp) * 100
+        -- draw waypoint info
+        local tx, ty = 10, 10
+        local fontHeight = math.floor(f.sh / 40) + 6
+        setDefaultFillColor(f.layer3, Shape_Text, 0, 1, 0.7, 1)
+        if atmodens < 0.01 then
+            setDefaultTextAlign(f.layer3, AlignH_Left, AlignV_Top)
+            addText(f.layer3, f.f_s, "--------------- WP DATA ---------------", tx, ty + 1 * fontHeight)
+            addText(f.layer3, f.f_xs, "DEST PLANET:", tx, ty + 2 * fontHeight)
+            addText(f.layer3, f.f_xs, "DISTANCE:", tx, ty + 3 * fontHeight)
+            addText(f.layer3, f.f_s, "------ SPACE FLIGHT DATA ------", tx, ty + 4 * fontHeight)
+            addText(f.layer3, f.f_xs, "EST FLIGHT TIME:", tx, ty + 5 * fontHeight)
+            addText(f.layer3, f.f_xs, "TIME TO RETRO BURN:", tx, ty + 6 * fontHeight)
+            addText(f.layer3, f.f_xs, "TIME TO BURN LEFT:", tx, ty + 7 * fontHeight)
+
+            tx = 235
+            setDefaultTextAlign(f.layer3, AlignH_Right, AlignV_Top)
+            addText(f.layer3, f.f_xs, wp.planet:upper(), tx, ty + 2 * fontHeight)
+            addText(f.layer3, f.f_xs, string.format("%s",wp.dist), tx, ty + 3 * fontHeight)
+            addText(f.layer3, f.f_xs, string.format("%s",wp.eft), tx, ty + 5 * fontHeight)
+            addText(f.layer3, f.f_xs, string.format("%s",wp.ttrb), tx, ty + 6 * fontHeight)
+            addText(f.layer3, f.f_xs, string.format("%s",wp.ttbl), tx, ty + 7 * fontHeight)
+        else
+            setDefaultTextAlign(f.layer3, AlignH_Left, AlignV_Top)
+            addText(f.layer3, f.f_s, "--------------- WP DATA ---------------", tx, ty + 1 * fontHeight)
+            addText(f.layer3, f.f_xs, "DEST PLANET:", tx, ty + 2 * fontHeight)
+            addText(f.layer3, f.f_xs, "DISTANCE:", tx, ty + 3 * fontHeight)
+            addText(f.layer3, f.f_s, "------- ATMO FLIGHT DATA ------", tx, ty + 4 * fontHeight)
+            addText(f.layer3, f.f_xs, "SUSTENTATION SPD:", tx, ty + 5 * fontHeight)
+
+            tx = 235
+            setDefaultTextAlign(f.layer3, AlignH_Right, AlignV_Top)
+            addText(f.layer3, f.f_xs, wp.planet:upper(), tx, ty + 2 * fontHeight)
+            addText(f.layer3, f.f_xs, string.format("%s",wp.dist), tx, ty + 3 * fontHeight)
+            addText(f.layer3, f.f_xs, string.format("%s",wp.ss), tx, ty + 5 * fontHeight)
+        end
+
+        -- draw vector
+        wp.v = vec3(wp.v) * 100
         setDefaultStrokeColor(f.layer3, Shape_Line, 0, 1, 0, 1)
         setDefaultStrokeWidth(f.layer3, Shape_Line, 1)
         setDefaultFillColor(f.layer3, Shape_Circle, 0, 1, 0, 1)
-        if (wp.z < 0) then
+        if (wp.v.z < 0) then
             setDefaultStrokeColor(f.layer3, Shape_Line, 1, 0, 0, 1)
             setDefaultFillColor(f.layer3, Shape_Circle, 1, 0, 0, 1)
         end
-        addLine(f.layer3, f.sw/2, f.sh/2 + lookDeltaY, f.sw/2 + wp.x, f.sh/2 + lookDeltaY - wp.y)
-        addCircle(f.layer3, f.sw/2 + wp.x, f.sh/2 + lookDeltaY - wp.y, 4)
+        addLine(f.layer3, f.sw / 2, f.sh / 2 + lookDeltaY, f.sw / 2 + wp.v.x, f.sh / 2 + lookDeltaY - wp.v.y)
+        addCircle(f.layer3, f.sw / 2 + wp.v.x, f.sh / 2 + lookDeltaY - wp.v.y, 4)
     end
 end
 
@@ -326,7 +362,7 @@ function HUD.loop(f)
 
     f:compass(data.cmp, data.aD)
     f:artificialHorizon(data.pitch, data.roll, -60, data.vPX, data.vPY, data.aD)
-    f:waypoint(data.wp, -60)
+    f:waypoint(data.wp, -60, data.aD)
 
     -- prepare data for unit
     data = {}

@@ -20,22 +20,48 @@ local w = {}
 if next(waypoint) ~= nil then
     local wpPos = vec3(wp2world(waypoint))
     local pos = vec3(construct.getWorldPosition())
-    local path = vec3(wpPos - pos):normalize()
+    local path = vec3(wpPos - pos)
+    local pathNorm = path:normalize()
     local up = vec3(construct.getWorldOrientationUp())
     local right = vec3(construct.getWorldOrientationRight())
     local forward = vec3(construct.getWorldOrientationForward())
 
-    w = {
-        path:dot(right),
-        path:dot(up),
-        path:dot(forward)
+    w.v = {
+        pathNorm:dot(right),
+        pathNorm:dot(up),
+        pathNorm:dot(forward)
     }
+    w.dist = path:len() / 1000
+    if w.dist > 200 then
+        w.dist = string.format("%.2f su", w.dist / 200)
+    else
+        w.dist = string.format("%.2f km", w.dist)
+    end
+
+    w.planet = getBodyNameFromWP(waypoint)
+    local eft = getSpaceFlightTime(waypoint)
+    w.eft = formatTime(eft)
+    if atmoDensity > 0.01 then
+        w.ttrb = 0
+        w.ttbl = 0
+    else
+        w.ttrb, w.ttbl = getTTRB(eft)
+        w.ttrb = formatTime(w.ttrb)
+        w.ttbl = formatTime(w.ttbl)
+    end
+    --#TODO: getSustentationSpeed()
+    w.ss = 300 --getSustentationSpeed()
+end
+
+local alt = 0
+if (atmoDensity > 0.01) then
+    alt = getTrimmedAltitude()
 end
 
 -- pack data for screen
 data = {
     wp = w,
-    alt = getTrimmedAltitude(),
+    alt = alt,
     pitch = pitch,
     roll = roll,
     cmp = getDeg2north(),

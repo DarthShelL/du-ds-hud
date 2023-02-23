@@ -57,11 +57,6 @@ function parseWaypoint(waypoint)
     return w
 end
 
--- calculates time to burn needed to reach to desiredSpeed
-function calculateBurnTime(currentVelocity, desiredVelocity, shipMass, deltaV, thrust)
-
-end
-
 function getFuelPercentage(tanks, number_of_tanks)
     local currentVolume = 0
     local maxVolume = tanks[1].getMaxVolume() * number_of_tanks
@@ -86,6 +81,67 @@ function getDeg2north()
     return angle
 end
 
+-- returns total thrust, total Isp and total deltaV
+function getShipSpaceVars()
+    if next(engines) == nil then
+        collectEngines()
+    end
+    local shipMass = getShipTotalMass()
+    local dryMass = getSpaceDryMass()
+    local thrust = 0
+    local isp = 0
+    local deltaV = 0
+    local e
+
+    if engines.space.extrasmall ~= nil then
+        e = engines.space.extrasmall
+        local t = e.engine.getMaxThrust()
+        local ffr = getFuelFlowRate(e.engine.getFuelConsumption(), 6)
+        local i = getIsp(t, ffr)
+        thrust = thrust + t * e.number
+        isp = isp + i * e.number
+        deltaV = deltaV + getDeltaV(shipMass, dryMass, i) * e.number
+    end
+    if engines.space.small ~= nil then
+        e = engines.space.small
+        local t = e.engine.getMaxThrust()
+        local ffr = getFuelFlowRate(e.engine.getFuelConsumption(), 6)
+        local i = getIsp(t, ffr)
+        thrust = thrust + t * e.number
+        isp = isp + i * e.number
+        deltaV = deltaV + getDeltaV(shipMass, dryMass, i) * e.number
+    end
+    if engines.space.medium ~= nil then
+        e = engines.space.medium
+        local t = e.engine.getMaxThrust()
+        local ffr = getFuelFlowRate(e.engine.getFuelConsumption(), 6)
+        local i = getIsp(t, ffr)
+        thrust = thrust + t * e.number
+        isp = isp + i * e.number
+        deltaV = deltaV + getDeltaV(shipMass, dryMass, i) * e.number
+    end
+    if engines.space.large ~= nil then
+        e = engines.space.large
+        local t = e.engine.getMaxThrust()
+        local ffr = getFuelFlowRate(e.engine.getFuelConsumption(), 6)
+        local i = getIsp(t, ffr)
+        thrust = thrust + t * e.number
+        isp = isp + i * e.number
+        deltaV = deltaV + getDeltaV(shipMass, dryMass, i) * e.number
+    end
+    if engines.space.extralarge ~= nil then
+        e = engines.space.extralarge
+        local t = e.engine.getMaxThrust()
+        local ffr = getFuelFlowRate(e.engine.getFuelConsumption(), 6)
+        local i = getIsp(t, ffr)
+        thrust = thrust + t * e.number
+        isp = isp + i * e.number
+        deltaV = deltaV + getDeltaV(shipMass, dryMass, i) * e.number
+    end
+
+    return thrust, isp, deltaV
+end
+
 function getFuelFlowRate(fuelConsumption, fuelWeight)
     return fuelConsumption * fuelWeight
 end
@@ -103,17 +159,17 @@ function getDeltaV(shipMass, shipDryMass, Isp)
 end
 
 engines = {}
-engines.space = {}
-engines.space.extrasmall = {}
-engines.space.extrasmall.number = 0
-engines.space.small = {}
-engines.space.small.number = 0
-engines.space.medium = {}
-engines.space.medium.number = 0
-engines.space.large = {}
-engines.space.large.number = 0
-engines.space.extralarge = {}
-engines.space.extralarge.number = 0
+--engines.space = {}
+--engines.space.extrasmall = {}
+--engines.space.extrasmall.number = 0
+--engines.space.small = {}
+--engines.space.small.number = 0
+--engines.space.medium = {}
+--engines.space.medium.number = 0
+--engines.space.large = {}
+--engines.space.large.number = 0
+--engines.space.extralarge = {}
+--engines.space.extralarge.number = 0
 
 function collectEngines()
     local elementIdList = core.getElementIdList()
@@ -122,6 +178,15 @@ function collectEngines()
         local spacePattern = 'spaceengine([a-z]+)group'
         if (class:find("spaceengine")) then
             local m = string.match(class, spacePattern)
+            if (engines.space == nil) then
+                engines.space = {}
+            end
+            if (engines.space[m] == nil) then
+                engines.space[m] = {}
+            end
+            if (engines.space[m].number == nil) then
+                engines.space[m].number = 0
+            end
             engines.space[m].number = engines.space[m].number + 1
             if engines.space[m].engine == nil then
                 engines.space[m].engine = unit["se_" .. m]
@@ -137,12 +202,98 @@ function wp2world(waypoint)
             return vec3(waypoint.latitude, waypoint.longitude, waypoint.altitude)
         end
         local body = atlas[waypoint.systemId][waypoint.bodyId]
-        local latitude  = constants.deg2rad*clamp(waypoint.latitude, -90, 90)
-        local longitude = constants.deg2rad*(waypoint.longitude % 360)
+        local latitude = constants.deg2rad * clamp(waypoint.latitude, -90, 90)
+        local longitude = constants.deg2rad * (waypoint.longitude % 360)
         local xproj = math.cos(latitude)
         wp = vec3(body.center) + (body.radius + waypoint.altitude) * vec3(xproj * math.cos(longitude), xproj * math.sin(longitude), math.sin(latitude))
     end
-    return {wp:unpack()}
+    return { wp:unpack() }
+end
+
+function getDistanceByWP(waypoint)
+    local wpPos = vec3(wp2world(waypoint))
+    local pos = vec3(construct.getWorldPosition())
+    local path = vec3(wpPos - pos)
+
+    return path:len()
+end
+
+function getBodyNameFromWP(waypoint)
+    if atlas[waypoint.systemId][waypoint.bodyId] ~= nil then
+        return atlas[waypoint.systemId][waypoint.bodyId].name[1]
+    end
+
+    return "X"
+end
+
+function getSpaceFlightTime(waypoint)
+    -- get current speed
+    local speed = vec3(construct.getAbsoluteVelocity()):len()
+    if speed == 0 then
+        return 0
+    end
+    -- get distance
+    local distance = getDistanceByWP(waypoint)
+    return distance / speed
+end
+
+function getShipTotalMass()
+    return construct.getMass() + player.getMass()
+end
+
+function getSpaceDryMass()
+    -- calculate fuel
+    local fuel = 0
+    for i = 1, spacefueltank_size do
+        fuel = fuel + spacefueltank[i].getItemsVolume()
+    end
+    local fuelMass = fuel * 6 -- kergon weighs 6 kilo
+    -- substract from total mass
+    return getShipTotalMass() - fuelMass
+end
+
+-- time to retro burn and time to burn left
+-- dT = (Ml*Ev)/F * (1 - exp(-dV/Ev))
+function getTTRB(eft)
+    local Ev = vec3(construct.getAbsoluteVelocity()):len()
+    local Ml = getShipTotalMass()
+    local F, Isp, dV = getShipSpaceVars()
+    local safeDistance = 100000 -- 100km
+    local safeTime = safeDistance / Ev
+
+    local ttrb = math.ceil((Ml * Ev) / F * (1 - math.exp(-dV / Ev)))
+    local ttbl = eft - ttrb - safeTime
+
+    return ttrb, ttbl
+end
+
+function getSustentationSpeed()
+
+end
+
+function formatTime(sec)
+    if sec > 3600 * 24 or sec < 1 then
+        -- we don't need such big or small values
+        return 0
+    end
+    if (sec >= 3600) then
+        -- hours :(
+        local h = math.floor(sec / 3600)
+        local m = 0
+        local s = sec % 3600
+        if (s >= 60) then
+            m = math.floor(s / 60)
+            s = math.ceil(s % 60)
+        end
+        sec = string.format("%02d:%02d:%02d", h, m, s)
+    elseif (sec >= 60) then
+        -- minutes
+        local m = math.floor(sec / 60)
+        sec = math.ceil(sec % 60)
+        sec = string.format("%02d:%02d", m, sec)
+    end
+
+    return sec
 end
 
 -- PID ----------------
